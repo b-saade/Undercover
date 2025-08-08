@@ -44,22 +44,7 @@
       flex: 1;
       margin-right: 10px;
     }
-    .add-player {
-      width: 100%;
-      background-color: #f5b958;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.3s ease;
-    }
-    .add-player:hover {
-      background-color: #f4a72c;
-    }
+    .add-player,
     button {
       width: 100%;
       background-color: #f5b958;
@@ -73,6 +58,7 @@
       font-size: 1rem;
       transition: background 0.3s ease;
     }
+    .add-player:hover,
     button:hover {
       background-color: #f4a72c;
     }
@@ -442,20 +428,28 @@
       
     ];
 
-     let players = [], roles = {}, words = {}, viewed = new Set(), hidden = new Set();
+      let players = [], roles = {}, words = {}, viewed = new Set(), hidden = new Set();
     let alivePlayers = [], undercoverCount = 0, whiteCount = 0;
+    let savedPlayerNames = [];
 
-    function addPlayerInput() {
+    function addPlayerInput(name = '') {
       const container = document.getElementById('playerInputs');
       const input = document.createElement('input');
       input.type = 'text';
       input.placeholder = 'Enter Name Here';
+      input.value = name;
       container.appendChild(input);
     }
 
-    function startGame() {
-      const inputs = document.querySelectorAll('#playerInputs input');
-      players = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+    function startGame(useSaved = false) {
+      if (!useSaved) {
+        const inputs = document.querySelectorAll('#playerInputs input');
+        players = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+        savedPlayerNames = [...players];
+      } else {
+        players = [...savedPlayerNames];
+      }
+
       undercoverCount = parseInt(document.getElementById('undercoverCount').value);
       whiteCount = parseInt(document.getElementById('whiteCount').value);
 
@@ -565,11 +559,22 @@
         res.innerHTML += `<li>${p} — ${roles[p]} — ${words[p] || 'Mr White'}</li>`;
       });
       res.innerHTML += '</ul>';
-      res.innerHTML += '<button onclick="location.reload()">Play Again</button>';
+      res.innerHTML += `
+        <button onclick="startGame(true)">Play Again (Same Players)</button>
+        <button onclick="restartGame()">Restart with New Players</button>
+      `;
       res.style.display = 'block';
     }
 
-    // Add initial input fields
+    function restartGame() {
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('playerInputs').innerHTML = '';
+      document.getElementById('setup').style.display = 'block';
+      for (let i = 0; i < 3; i++) addPlayerInput();
+      savedPlayerNames = [];
+    }
+
+    // Auto-load 3 player fields on load
     for (let i = 0; i < 3; i++) addPlayerInput();
   </script>
 </body>
