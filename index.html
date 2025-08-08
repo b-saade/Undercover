@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undercover Game</title>
+  <style>
+    body {
+      background-color: #d3d3d3;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      color: #fff;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #32842B;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+    .logo {
+      display: block;
+      margin: 0 auto 20px auto;
+      max-width: 150px;
+    }
+    h1, h2, h3, label {
+      color: #f5b958;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    .player-input {
+      display: flex;
+      align-items: center;
+    }
+    .player-input input {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .add-player {
+      width: 100%;
+      background-color: #f5b958;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+    .add-player:hover {
+      background-color: #f4a72c;
+    }
+    button {
+      width: 100%;
+      background-color: #f5b958;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #f4a72c;
+    }
+    .hidden {
+      display: none;
+    }
+    .player-button.voted {
+      background-color: grey !important;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    #game, #revealWords, #voting, #results {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" alt="Game Logo" class="logo">
+    <h1>PLAYER NAMES</h1>
+    <p>Please enter the player names below. We recommend a minimum of 4 players.</p>
+    <div id="setup">
+      <div id="playerInputs"></div>
+      <button class="add-player" onclick="addPlayerInput()">+</button>
+      <h2>SETTINGS</h2>
+      <label for="undercoverCount">UNDERCOVERS</label>
+      <input type="number" id="undercoverCount" value="1" min="0">
+      <label for="whiteCount">MR. WHITES</label>
+      <input type="number" id="whiteCount" value="0" min="0">
+      <button onclick="startGame()">NEXT</button>
+    </div>
+
+    <div id="game">
+      <h2>Click your name to see your word</h2>
+      <div id="playerButtons"></div>
+      <br>
+      <button id="nextBtn" onclick="showVoting()" class="hidden">Next</button>
+    </div>
+
+    <div id="voting">
+      <h2 id="starter"></h2>
+      <h3>Vote someone out</h3>
+      <div id="voteButtons"></div>
+      <div id="voteResult"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const wordPairs = [
+      ["Apple", "Pear"],
+["Beach", "Desert"],
+["Doctor", "Nurse"],
+["Knife", "Sword"],
+["Prison", "Jail"],
+["Pillow", "Cushion"],
+["Lion", "Tiger"],
+["School", "College"],
+["Plane", "Helicopter"],
+["Salt", "Sugar"],
+["Phone", "Tablet"],
+["Mirror", "Window"],
+["King", "Emperor"],
+["Laptop", "Computer"],
+["Pen", "Marker"],
+["Fire", "Smoke"],
+["Forest", "Jungle"],
+["Cat", "Dog"],
+["Rice", "Pasta"],
+["Vampire", "Zombie"],
+["Mountain", "Hill"],
+["Shirt", "Jacket"],
+["Water", "Juice"],
+["Teacher", "Professor"],
+["Ocean", "Sea"],
+["Moon", "Sun"],
+["Glass", "Cup"],
+["Fish", "Whale"],
+["Spider", "Ant"],
+["Robot", "Alien"],
+["Chef", "Waiter"],
+["Hospital", "Clinic"],
+["Window", "Door"],
+["Ice", "Snow"],
+["Rocket", "Missile"],
+["Police", "Soldier"],
+["Restaurant", "Café"],
+["Hat", "Helmet"],
+["Train", "Tram"],
+["Bed", "Couch"],
+["Milk", "Cream"],
+["Battery", "Charger"],
+["Nail", "Screw"],
+["Cookie", "Biscuit"],
+["Chocolate", "Nutella"],
+["Brush", "Comb"],
+["Shower", "Bath"],
+["Dentist", "Orthodontist"],
+["Game", "Puzzle"],
+["Movie", "Series"],
+["Clock", "Watch"],
+["Keyboard", "Piano"],
+["Map", "GPS"],
+["Park", "Garden"],
+["Scissors", "Knife"],
+["Blanket", "Quilt"],
+["Camera", "Video"],
+["Magazine", "Newspaper"],
+["Grass", "Weed"],
+["Backpack", "Suitcase"],
+["Taxi", "Uber"],
+["Microphone", "Speaker"],
+["Shadow", "Reflection"],
+["Star", "Planet"],
+["Book", "Diary"],
+["Candle", "Lamp"],
+["Chair", "Stool"],
+["Snake", "Worm"],
+["Balloon", "Bubble"],
+["Honey", "Syrup"],
+["Painter", "Artist"],
+["Brush", "Mop"],
+["Chef", "Baker"],
+["Castle", "Palace"],
+["Wizard", "Witch"],
+["Singer", "Rapper"],
+["Spider-Man", "Batman"],
+["Volcano", "Earthquake"],
+["Tornado", "Hurricane"],
+["Elevator", "Escalator"],
+["Guitar", "Violin"],
+["Submarine", "Ship"],
+["Bread", "Toast"],
+["Airport", "Runway"],
+["Tent", "Cabin"],
+["Match", "Lighter"],
+["Ball", "Globe"],
+["Socks", "Shoes"],
+["Paint", "Ink"],
+["Singer", "Dancer"],
+["Kingdom", "Empire"],
+["Penguin", "Seagull"],
+["Donut", "Croissant"],
+["Castle", "Fortress"],
+["Ladder", "Stairs"],
+["Glue", "Tape"],
+["Hammer", "Mallet"],
+["Sweater", "Hoodie"],
+["Island", "Peninsula"],
+["Toothbrush", "Toothpaste"],
+["Rocket", "Shuttle"],
+["Compass", "Map"],
+["Planet", "Asteroid"],
+["Broom", "Vacuum"],
+["Curtain", "Blinds"],
+["Lemon", "Lime"],
+["Table", "Desk"],
+["Window", "Mirror"],
+["Notebook", "Journal"],
+["Jeans", "Trousers"],
+["Fireman", "Policeman"],
+["Stethoscope", "Thermometer"],
+["Ruler", "Tape Measure"],
+["Suit", "Blazer"],
+["Crayon", "Marker"],
+["Helmet", "Cap"],
+["Basket", "Bin"],
+["Tent", "Camper"],
+["Knife", "Scissors"],
+["Drum", "Guitar"],
+["Chalk", "Charcoal"],
+["Painter", "Sculptor"],
+["Notebook", "Sketchbook"],
+["Boot", "Sneaker"],
+["Charger", "Adapter"],
+["Printer", "Scanner"],
+["Cable", "Wire"],
+["Soap", "Shampoo"],
+["Eagle", "Hawk"],
+["Stapler", "Hole Punch"],
+["Ice Cream", "Gelato"],
+["Bus", "Van"],
+["Laptop", "Tablet"],
+["Keyboard", "Typewriter"],
+["Mountain", "Cliff"],
+["Trophy", "Medal"],
+["Airplane", "Jet"],
+["Cactus", "Succulent"],
+["River", "Stream"],
+["Dress", "Gown"],
+["Bicycle", "Scooter"],
+["Watch", "Clock"],
+["House", "Apartment"],
+["Mosque", "Church"],
+["Candle", "Torch"],
+["Spaghetti", "Lasagna"],
+["Leaf", "Petal"],
+["Boot", "Loafer"],
+["Pencil", "Pen"],
+["Car", "Truck"],
+["Starfish", "Seashell"],
+["Helmet", "Goggles"],
+["Mango", "Papaya"],
+["Bench", "Chair"],
+["Sandwich", "Wrap"],
+["Sponge", "Towel"],
+["Egg", "Omelette"],
+["Oven", "Microwave"],
+["Parrot", "Canary"],
+["Tent", "Hammock"],
+["Bridge", "Tunnel"],
+["Couch", "Recliner"],
+["Wallet", "Purse"],
+["Storm", "Blizzard"],
+["Pizza", "Calzone"],
+["Doctor", "Surgeon"],
+["Sun", "Star"],
+["Glass", "Crystal"],
+["Grass", "Moss"],
+["Fence", "Wall"],
+["Cave", "Canyon"],
+["Corn", "Wheat"],
+["Toy", "Game"],
+["Bubble", "Foam"],
+["Cereal", "Granola"],
+["Ski", "Snowboard"],
+["Cloud", "Fog"],
+["Clock", "Hourglass"],
+["Bowl", "Cup"],
+["Belt", "Suspenders"],
+["Cloud", "Mist"],
+["Engine", "Motor"],
+["Battery", "Powerbank"],
+["Gun", "Rifle"],
+["Tank", "Cannon"],
+["Soldier", "General"],
+["Screw", "Bolt"],
+["Leaf", "Twig"],
+["Rain", "Drizzle"],
+["Boat", "Raft"],
+["Shovel", "Spade"],
+["Knight", "Samurai"],
+["Armor", "Shield"],
+["Garage", "Carport"],
+["Bridge", "Pier"],
+["Pebble", "Rock"],
+["Plank", "Board"],
+["Tent", "Yurt"],
+["Coat", "Trenchcoat"],
+["Chocolate", "Brownie"],
+["Cheese", "Butter"],
+["Fruit", "Berry"],
+["Teeth", "Molars"],
+["Nose", "Nostril"],
+["Eye", "Eyebrow"],
+["Guitar", "Banjo"],
+["Flute", "Recorder"],
+["Pillow", "Mattress"],
+["Lantern", "Lamp"],
+["Suitcase", "Backpack"],
+["Helmet", "Hardhat"],
+["Firetruck", "Ambulance"],
+["Notebook", "Planner"],
+["Microscope", "Telescope"],
+["Fan", "Air Conditioner"],
+["Basketball", "Volleyball"],
+["Soccer", "Rugby"],
+["Lipstick", "Chapstick"],
+["Brush", "Broom"],
+["Tent", "Igloo"],
+["Ant", "Bee"],
+["Elephant", "Hippo"],
+["Mosquito", "Fly"],
+["Spider", "Scorpion"],
+["Ladder", "Elevator"],
+["Remote", "Controller"],
+["Curtain", "Shade"],
+["Pineapple", "Mango"],
+["Avocado", "Guacamole"],
+["Burger", "Sandwich"],
+["Pasta", "Noodles"],
+["Cracker", "Cookie"],
+["Lollipop", "Candy"],
+["Toffee", "Caramel"],
+["Bottle", "Flask"],
+["Can", "Jar"],
+["Mug", "Cup"],
+["Spoon", "Fork"],
+["Plate", "Tray"],
+["Napkin", "Tissue"],
+["Toothpick", "Skewer"],
+["Towel", "Rag"],
+["Laundry", "Washing"],
+["Socks", "Slippers"],
+["Jacket", "Cardigan"],
+["Scarf", "Shawl"],
+["Beanie", "Cap"],
+["Snow", "Hail"],
+["Rain", "Storm"],
+["Lightning", "Thunder"],
+["Sunlight", "Moonlight"],
+["Dawn", "Sunrise"],
+["Dusk", "Sunset"],
+["Star", "Comet"],
+["Meteor", "Asteroid"],
+["Planet", "Galaxy"],
+["Universe", "Cosmos"],
+["Rocket", "Satellite"],
+["Space", "Sky"],
+["Lake", "Pond"],
+["Stream", "Creek"],
+["Forest", "Woods"],
+["Jungle", "Rainforest"],
+["Desert", "Savannah"],
+["Canyon", "Valley"],
+["Hill", "Slope"],
+["Cliff", "Ridge"],
+["Cave", "Grotto"],
+["Beach", "Shore"],
+["Coast", "Harbor"],
+["Island", "Atoll"],
+["Peninsula", "Isthmus"],
+["Bridge", "Causeway"],
+["Tunnel", "Underground"],
+["Road", "Path"],
+["Trail", "Track"],
+["Street", "Avenue"],
+["Boulevard", "Drive"],
+["Alley", "Lane"],
+["Plaza", "Square"],
+["Building", "Skyscraper"],
+["House", "Cabin"],
+["Apartment", "Condo"],
+["Garage", "Shed"],
+["Attic", "Basement"],
+["Room", "Chamber"],
+["Bed", "Mattress"],
+["Pillow", "Cushion"],
+["Blanket", "Duvet"],
+["Lamp", "Lantern"],
+["Fan", "Heater"],
+["Mirror", "Glass"],
+["Window", "Shutter"],
+["Door", "Gate"],
+["Lock", "Latch"],
+["Key", "Card"],
+["Safe", "Vault"],
+["Alarm", "Bell"],
+["Phone", "Radio"],
+["Television", "Projector"],
+["Speaker", "Microphone"],
+["Camera", "Drone"],
+["Computer", "Monitor"],
+["Laptop", "Notebook"],
+["Keyboard", "Mouse"],
+["Charger", "Plug"],
+["Battery", "Powerbank"],
+["Wire", "Cable"],
+["Router", "Modem"],
+["Internet", "Wi-Fi"],
+["Email", "Message"],
+["App", "Software"],
+["Game", "Level"],
+["Score", "Points"]
+
+      
+    ];
+
+     let players = [], roles = {}, words = {}, viewed = new Set(), hidden = new Set();
+    let alivePlayers = [], undercoverCount = 0, whiteCount = 0;
+
+    function addPlayerInput() {
+      const container = document.getElementById('playerInputs');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Enter Name Here';
+      container.appendChild(input);
+    }
+
+    function startGame() {
+      const inputs = document.querySelectorAll('#playerInputs input');
+      players = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+      undercoverCount = parseInt(document.getElementById('undercoverCount').value);
+      whiteCount = parseInt(document.getElementById('whiteCount').value);
+
+      const civs = players.length - undercoverCount - whiteCount;
+      if (civs <= 0 || undercoverCount >= civs) {
+        alert('Too many Undercover/Mr White. Adjust roles.');
+        return;
+      }
+
+      alivePlayers = [...players];
+      assignRoles();
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      renderPlayerButtons();
+    }
+
+    function assignRoles() {
+      const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+      let shuffled = [...players].sort(() => Math.random() - 0.5);
+      roles = {}; words = {}; viewed = new Set(); hidden = new Set();
+
+      for (let i = 0; i < undercoverCount; i++) {
+        roles[shuffled[i]] = 'undercover';
+        words[shuffled[i]] = pair[0];
+      }
+      for (let i = undercoverCount; i < undercoverCount + whiteCount; i++) {
+        roles[shuffled[i]] = 'white';
+        words[shuffled[i]] = '';
+      }
+      for (let i = undercoverCount + whiteCount; i < shuffled.length; i++) {
+        roles[shuffled[i]] = 'civilian';
+        words[shuffled[i]] = pair[1];
+      }
+    }
+
+    function renderPlayerButtons() {
+      const container = document.getElementById('playerButtons');
+      container.innerHTML = '';
+      players.forEach(name => {
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.onclick = () => {
+          if (!viewed.has(name)) {
+            btn.textContent = words[name] || 'You are Mr White!';
+            viewed.add(name);
+          } else if (!hidden.has(name)) {
+            btn.textContent = name;
+            btn.disabled = true;
+            btn.style.backgroundColor = 'grey';
+            hidden.add(name);
+            if (hidden.size === players.length) {
+              document.getElementById('nextBtn').classList.remove('hidden');
+            }
+          }
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function showVoting() {
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('voting').style.display = 'block';
+      const starter = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+      document.getElementById('starter').textContent = `${starter} starts describing their word.`;
+      renderVoteButtons();
+    }
+
+    function renderVoteButtons() {
+      const container = document.getElementById('voteButtons');
+      container.innerHTML = '';
+      alivePlayers.forEach(name => {
+        const btn = document.createElement('button');
+        btn.textContent = name;
+        btn.className = 'player-button';
+        btn.onclick = () => voteOut(name, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function voteOut(name, btn) {
+      btn.classList.add('voted');
+      btn.disabled = true;
+      alivePlayers = alivePlayers.filter(n => n !== name);
+      document.getElementById('voteResult').textContent = `${name} was voted out. Role: ${roles[name]}`;
+      checkGameEnd();
+    }
+
+    function checkGameEnd() {
+      const u = alivePlayers.filter(n => roles[n] === 'undercover').length;
+      const w = alivePlayers.filter(n => roles[n] === 'white').length;
+      const c = alivePlayers.filter(n => roles[n] === 'civilian').length;
+      if (u + w === 0) {
+        endGame('Civilians Win!');
+      } else if (u >= c) {
+        endGame('Undercover Wins!');
+      }
+    }
+
+    function endGame(message) {
+      document.getElementById('voting').style.display = 'none';
+      const res = document.getElementById('results');
+      res.innerHTML = `<h2>${message}</h2>`;
+      const realPair = Object.values(words).filter(Boolean);
+      res.innerHTML += `<p>Words were: ${[...new Set(realPair)].join(' vs ')}</p>`;
+      res.innerHTML += '<h3>Roles Summary:</h3><ul>';
+      players.forEach(p => {
+        res.innerHTML += `<li>${p} — ${roles[p]} — ${words[p] || 'Mr White'}</li>`;
+      });
+      res.innerHTML += '</ul>';
+      res.innerHTML += '<button onclick="location.reload()">Play Again</button>';
+      res.style.display = 'block';
+    }
+
+    // Add initial input fields
+    for (let i = 0; i < 3; i++) addPlayerInput();
+  </script>
+</body>
+</html>
